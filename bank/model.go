@@ -63,11 +63,6 @@ func (b *Bank) GetAccountBalance(id uuid.UUID) (string, error) {
 	return ac.balance.String(), nil
 }
 
-func (b *Bank) IdExists(id uuid.UUID) bool {
-	_, ok := b.accounts[id]
-	return ok
-}
-
 func (b *Bank) Transfer(from uuid.UUID, to uuid.UUID, amount big.Int) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -85,7 +80,7 @@ func (b *Bank) Transfer(from uuid.UUID, to uuid.UUID, amount big.Int) error {
 		return errors.New("Originating account not found")
 	} else {
 
-		// Check of from has enough balance
+		// Check if from has enough balance
 		fromBalance := b.accounts[from].balance
 		if amount.Cmp(fromBalance) == 1 {
 			return errors.New("Originating balance not enough")
