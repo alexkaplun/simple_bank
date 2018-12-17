@@ -35,7 +35,7 @@ func (b *Bank) CreateAccount(balance big.Int) (uuid.UUID, error) {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 	newId := uuid.New()
-	if b.IdExists(newId) {
+	if _, ok := b.accounts[newId]; ok {
 		return uuid.Nil, errors.New("Can't generate Account ID")
 	}
 
@@ -77,11 +77,11 @@ func (b *Bank) Transfer(from uuid.UUID, to uuid.UUID, amount big.Int) error {
 		return errors.New("Can't be negative balance")
 	}
 
-	if !b.IdExists(to) {
+	if _, ok := b.accounts[to]; !ok {
 		return errors.New("Terminating account not found")
 	}
 
-	if !b.IdExists(from) {
+	if _, ok := b.accounts[from]; !ok {
 		return errors.New("Originating account not found")
 	} else {
 
