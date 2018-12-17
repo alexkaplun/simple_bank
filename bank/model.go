@@ -52,16 +52,15 @@ func (b *Bank) CreateAccount(balance big.Int) (uuid.UUID, error) {
 
 func (b *Bank) GetAccountBalance(id uuid.UUID) (string, error) {
 	// checking if account exists
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	ac, ok := b.accounts[id]
 	if !ok {
 		return "", errors.New("No account found")
 	}
 
-	b.mu.Lock()
-	balance := ac.balance
-	b.mu.Unlock()
-
-	return balance.String(), nil
+	return ac.balance.String(), nil
 }
 
 func (b *Bank) IdExists(id uuid.UUID) bool {
@@ -70,6 +69,9 @@ func (b *Bank) IdExists(id uuid.UUID) bool {
 }
 
 func (b *Bank) Transfer(from uuid.UUID, to uuid.UUID, amount big.Int) error {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	// checking 0 or negative amount
 	if amount.Cmp(new(big.Int)) <= 0 {
 		return errors.New("Can't be negative balance")
@@ -82,9 +84,6 @@ func (b *Bank) Transfer(from uuid.UUID, to uuid.UUID, amount big.Int) error {
 	if !b.IdExists(from) {
 		return errors.New("Originating account not found")
 	} else {
-
-		b.mu.Lock()
-		defer b.mu.Unlock()
 
 		// Check of from has enough balance
 		fromBalance := b.accounts[from].balance
