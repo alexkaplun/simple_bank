@@ -1,8 +1,10 @@
 package bank
 
+// go test -coverprofile=cover.out && go tool cover -html=cover.out -o cover.html
+
 import (
 	"github.com/google/uuid"
-	"math/big"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -29,7 +31,7 @@ var balances = []string{
 	"50000",
 	"5000000",
 	"5000000",
-	"1000000000000000000000000000000000",
+	"1000000000000000",
 	"12121212",
 	"34234234234",
 	///////////////////////////////////////
@@ -43,8 +45,8 @@ var testBank = &Bank{
 
 func init() {
 	for i := 0; i < 9; i++ {
-		b := new(big.Int)
-		b.SetString(balances[i], 10)
+		b, _ := strconv.ParseInt(balances[i], 10, 64)
+
 		acc := Account{
 			createdAt: time.Now(),
 			updatedAt: time.Now(),
@@ -58,56 +60,54 @@ func init() {
 func TestBank_CreateAccount(t *testing.T) {
 	//fmt.Println(len(testBank.accounts))
 
-	b := new(big.Int)
-	b.SetString("1000", 10)
-	uid, err := testBank.CreateAccount(*b)
+	var b int64 = 1000
+	uid, err := testBank.CreateAccount(b)
 
 	if err != nil {
 		t.Errorf("Can't create account with uid %s", uid.String())
 	} else {
 
 		createdBalance := testBank.accounts[uid].balance
-		if createdBalance.Cmp(b) != 0 {
-			t.Errorf("New account balance wrong. Got %s, expected %s", createdBalance.String(), b.String())
+		if createdBalance != b {
+			t.Errorf("New account balance wrong. Got %d, expected %d", createdBalance, b)
 		}
 	}
 }
 
 func TestBank_CreateAccountBalances(t *testing.T) {
-	b := new(big.Int)
-
 	// test zero balance
-	b.SetString("0", 10)
-	uid, err := testBank.CreateAccount(*b)
+	var b int64
+	b = 0
+	uid, err := testBank.CreateAccount(b)
 
 	if err != nil {
 		t.Errorf("Can't create account with uid %s", uid.String())
 	} else {
 
 		createdBalance := testBank.accounts[uid].balance
-		if createdBalance.Cmp(b) != 0 {
-			t.Errorf("New account balance wrong. Got %s, expected %s", createdBalance.String(), b.String())
+		if createdBalance != b {
+			t.Errorf("New account balance wrong. Got %d, expected %d", createdBalance, b)
 		}
 
 	}
 
 	// test very big balance
-	b.SetString("9999999999999999999999999999999999999", 10)
-	uid, err = testBank.CreateAccount(*b)
+	b = 999999999999999999
+	uid, err = testBank.CreateAccount(b)
 
 	if err != nil {
 		t.Errorf("Can't create account with uid %s", uid.String())
 	} else {
 
 		createdBalance := testBank.accounts[uid].balance
-		if createdBalance.Cmp(b) != 0 {
-			t.Errorf("New account balance wrong. Got %s, expected %s", createdBalance.String(), b.String())
+		if createdBalance != b {
+			t.Errorf("New account balance wrong. Got %d, expected %d", createdBalance, b)
 		}
 	}
 
 	// test  negative balance
-	b.SetString("-10", 10)
-	uid, err = testBank.CreateAccount(*b)
+	b = -10
+	uid, err = testBank.CreateAccount(b)
 
 	if err == nil {
 		t.Errorf("Should not allow create negative account")
@@ -118,8 +118,8 @@ func TestBank_GetAccountBalance(t *testing.T) {
 	uid, _ := uuid.Parse("05fed8ad-3581-48f3-89a8-fcb29b672fe0")
 	gotBalance, _ := testBank.GetAccountBalance(uid)
 
-	if gotBalance != "1000000000000000000000000000000000" {
-		t.Errorf("Get Balance error. Got %s expected 1000000000000000000000000000000000", gotBalance)
+	if gotBalance != "1000000000000000" {
+		t.Errorf("Get Balance error. Got %s expected 1000000000000000", gotBalance)
 	}
 }
 
@@ -128,62 +128,56 @@ func TestBank_GetAccountBalanceNoAccount(t *testing.T) {
 	_, err := testBank.GetAccountBalance(uid)
 
 	if err == nil {
-	 	t.Errorf("Get balance error, got balance on non existing account")
+		t.Errorf("Get balance error, got balance on non existing account")
 	}
 }
 
 func TestBank_TransferFromNotExists(t *testing.T) {
-	uidFrom, _	:= uuid.Parse("11111111-1111-1111-1111-1111111111")
-	uidTo, _ 	:= uuid.Parse(ids[0])
+	uidFrom, _ := uuid.Parse("11111111-1111-1111-1111-1111111111")
+	uidTo, _ := uuid.Parse(ids[0])
 
-	amount := new(big.Int)
-	amount.SetString("100", 10)
-	if err := testBank.Transfer(uidFrom, uidTo, *amount); err == nil {
+	var amount int64 = 100
+	if err := testBank.Transfer(uidFrom, uidTo, amount); err == nil {
 		t.Errorf("Transfer error, transfer FROM non-existing account")
 	}
 
 }
 
 func TestBank_TransferToNotExists(t *testing.T) {
-	uidFrom, _	:= uuid.Parse(ids[0])
-	uidTo, _ 	:= uuid.Parse("11111111-1111-1111-1111-1111111111")
+	uidFrom, _ := uuid.Parse(ids[0])
+	uidTo, _ := uuid.Parse("11111111-1111-1111-1111-1111111111")
 
-	amount := new(big.Int)
-	amount.SetString("100", 10)
-	if err := testBank.Transfer(uidFrom, uidTo, *amount); err == nil {
+	var amount int64 = 100
+	if err := testBank.Transfer(uidFrom, uidTo, amount); err == nil {
 		t.Errorf("Transfer error, transfer TO non-existing account")
 	}
 }
 
 func TestBank_TransferZeroOrNegative(t *testing.T) {
-	uidFrom, _	:= uuid.Parse(ids[0])
-	uidTo, _ 	:= uuid.Parse(ids[1])
+	uidFrom, _ := uuid.Parse(ids[0])
+	uidTo, _ := uuid.Parse(ids[1])
 
-	amountZero := new(big.Int)
-	amountZero.SetString("0", 10)
-	if err := testBank.Transfer(uidFrom, uidTo, *amountZero); err == nil {
+	var amountZero int64 = 0
+	if err := testBank.Transfer(uidFrom, uidTo, amountZero); err == nil {
 		t.Errorf("Transfer error, transfer zero amount")
 	}
 
-	amountNegative := new(big.Int)
-	amountNegative.SetString("-100", 10)
-	if err := testBank.Transfer(uidFrom, uidTo, *amountNegative); err == nil {
+	var amountNegative int64 = -100
+	if err := testBank.Transfer(uidFrom, uidTo, amountNegative); err == nil {
 		t.Errorf("Transfer error, transfer negative")
 	}
 }
 
 func TestBank_Transfer(t *testing.T) {
-	uidFrom, _	:= uuid.Parse(ids[3]) // balance = 50000
-	uidTo, _ 	:= uuid.Parse(ids[2]) // balace = 1000
+	uidFrom, _ := uuid.Parse(ids[3]) // balance = 50000
+	uidTo, _ := uuid.Parse(ids[2])   // balace = 1000
 
-	amount := new(big.Int)
-	amount.SetString("5000", 10)
+	var amount int64 = 5000
 
-	testBank.Transfer(uidFrom, uidTo, *amount)
+	testBank.Transfer(uidFrom, uidTo, amount)
 
-
-	if fromBal, _ := testBank.GetAccountBalance(uidFrom); fromBal != "45000" {
-		t.Errorf("Wrong FROM balance after transfer. Got %s, expected 45000", fromBal)
+	if fromVal, _ := testBank.GetAccountBalance(uidFrom); fromVal != "45000" {
+		t.Errorf("Wrong FROM balance after transfer. Got %s, expected 45000", fromVal)
 	}
 
 	if toBal, _ := testBank.GetAccountBalance(uidTo); toBal != "6000" {
@@ -192,13 +186,12 @@ func TestBank_Transfer(t *testing.T) {
 }
 
 func TestBank_TransferNotEnoughBalance(t *testing.T) {
-	uidFrom, _	:= uuid.Parse(ids[3]) // balance = 50000
-	uidTo, _ 	:= uuid.Parse(ids[2]) // balace = 1000
+	uidFrom, _ := uuid.Parse(ids[3]) // balance = 50000
+	uidTo, _ := uuid.Parse(ids[2])   // balace = 1000
 
-	amount := new(big.Int)
-	amount.SetString("50001", 10)
+	var amount int64 = 50001
 
-	err := testBank.Transfer(uidFrom, uidTo, *amount)
+	err := testBank.Transfer(uidFrom, uidTo, amount)
 
 	if err == nil {
 		t.Errorf("Error transfer inadequste balance")
