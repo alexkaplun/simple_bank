@@ -155,7 +155,7 @@ func TestBank_TransferToNotExists(t *testing.T) {
 	}
 }
 
-func TestBank_TransferZeroOrNegatoive(t *testing.T) {
+func TestBank_TransferZeroOrNegative(t *testing.T) {
 	uidFrom, _	:= uuid.Parse(ids[0])
 	uidTo, _ 	:= uuid.Parse(ids[1])
 
@@ -191,7 +191,7 @@ func TestBank_Transfer(t *testing.T) {
 	}
 }
 
-func TestBank_TransferNotEnpoughBalance(t *testing.T) {
+func TestBank_TransferNotEnoughBalance(t *testing.T) {
 	uidFrom, _	:= uuid.Parse(ids[3]) // balance = 50000
 	uidTo, _ 	:= uuid.Parse(ids[2]) // balace = 1000
 
