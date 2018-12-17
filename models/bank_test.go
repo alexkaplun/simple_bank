@@ -1,6 +1,6 @@
 package bank
 
-// go test -coverprofile=cover.out && go tool cover -html=cover.out -o cover.html
+// go test -coverprofile=../test_out/cover.out && go tool cover -html=../test_out/cover.out -o ../test_out/cover.html
 
 import (
 	"github.com/google/uuid"
@@ -75,7 +75,7 @@ func TestBank_CreateAccount(t *testing.T) {
 }
 
 func TestBank_CreateAccountBalances(t *testing.T) {
-	// test zero balance
+	// tests zero balance
 	var b int64
 	b = 0
 	uid, err := testBank.CreateAccount(b)
@@ -91,7 +91,7 @@ func TestBank_CreateAccountBalances(t *testing.T) {
 
 	}
 
-	// test very big balance
+	// tests very big balance
 	b = 999999999999999999
 	uid, err = testBank.CreateAccount(b)
 
@@ -105,7 +105,7 @@ func TestBank_CreateAccountBalances(t *testing.T) {
 		}
 	}
 
-	// test  negative balance
+	// tests  negative balance
 	b = -10
 	uid, err = testBank.CreateAccount(b)
 

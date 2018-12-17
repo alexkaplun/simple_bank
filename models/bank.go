@@ -30,15 +30,15 @@ func GetBank() *Bank {
 
 func (b *Bank) CreateAccount(balance int64) (uuid.UUID, error) {
 	if balance < 0 {
-		return uuid.Nil, errors.New("Can't be negative balance")
+		return uuid.Nil, errors.New("сan not be negative balance")
 	}
 
 	b.mu.Lock()
 	defer b.mu.Unlock()
-	
+
 	newId := uuid.New()
 	if _, ok := b.accounts[newId]; ok {
-		return uuid.Nil, errors.New("Can't generate Account ID")
+		return uuid.Nil, errors.New("сan not generate Account ID")
 	}
 
 	b.accounts[newId] = &Account{
@@ -57,7 +57,7 @@ func (b *Bank) GetAccountBalance(id uuid.UUID) (string, error) {
 
 	ac, ok := b.accounts[id]
 	if !ok {
-		return "", errors.New("No account found")
+		return "", errors.New("no account found")
 	}
 
 	return strconv.FormatInt(ac.balance, 10), nil
@@ -69,21 +69,21 @@ func (b *Bank) Transfer(from uuid.UUID, to uuid.UUID, amount int64) error {
 
 	// checking 0 or negative amount
 	if amount <= 0 {
-		return errors.New("Can't be negative balance")
+		return errors.New("can not be negative balance")
 	}
 
 	if _, ok := b.accounts[to]; !ok {
-		return errors.New("Terminating account not found")
+		return errors.New("terminating account not found")
 	}
 
 	if _, ok := b.accounts[from]; !ok {
-		return errors.New("Originating account not found")
+		return errors.New("originating account not found")
 	} else {
 
 		// Check if from has enough balance
 		fromBalance := b.accounts[from].balance
 		if fromBalance < amount {
-			return errors.New("Originating balance not enough")
+			return errors.New("originating balance not enough")
 		}
 
 		//all validated, let's transfer
