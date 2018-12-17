@@ -32,12 +32,13 @@ func (b *Bank) CreateAccount(balance big.Int) (uuid.UUID, error) {
 		return uuid.Nil, errors.New("Can't be negative balance")
 	}
 
+	b.mu.Lock()
+	defer b.mu.Unlock()
 	newId := uuid.New()
 	if b.IdExists(newId) {
 		return uuid.Nil, errors.New("Can't generate Account ID")
 	}
 
-	b.mu.Lock()
 	newBalance := balance
 
 	b.accounts[newId] = &Account{
@@ -45,7 +46,6 @@ func (b *Bank) CreateAccount(balance big.Int) (uuid.UUID, error) {
 		updatedAt: time.Now(),
 		balance:   &newBalance,
 	}
-	b.mu.Unlock()
 
 	return newId, nil
 }
