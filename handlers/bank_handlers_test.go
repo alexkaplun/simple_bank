@@ -2,6 +2,7 @@ package handlers_test
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"simple_bank/server"
@@ -9,29 +10,27 @@ import (
 	"testing"
 )
 
-type TestCase struct {
-	id       int
+type TestCaseStatusCode struct {
 	input    string
-	expected int
-	positive bool
+	statusCode int
 }
 
 func TestCreateAccountHandler(t *testing.T) {
-	cases := []TestCase{
-		// positive
-		{id: 1, input: `{"balance" : "0.08"}`, expected: http.StatusOK, positive: true},
-		{id: 2, input: `{"balance" : "3.80"}`, expected: http.StatusOK, positive: true},
-		{id: 3, input: `{"balance" : "0"}`, expected: http.StatusOK, positive: true},
-		{id: 4, input: `{"balance" : "100"}`, expected: http.StatusOK, positive: true},
-		{id: 5, input: `{"balance" : "99999.99"}`, expected: http.StatusOK, positive: true},
+
+	cases := map[string]TestCaseStatusCode {
+		"8 cents" : {input: `{"balance" : "0.08"}`, statusCode: http.StatusOK},
+		"3.80": {input: `{"balance" : "3.80"}`, statusCode: http.StatusOK},
+		"zero": {input: `{"balance" : "0"}`, statusCode: http.StatusOK  },
+		"Normal 100": {input: `{"balance" : "100"}`,  statusCode: http.StatusOK},
+		"Normal float":{input: `{"balance" : "99999.99"}`,  statusCode: http.StatusOK  },
 		/// negative
-		{id: 6, input: `{"balance" : "99999.999"}`, expected: http.StatusUnprocessableEntity, positive: false},
-		{id: 7, input: `{"balance" : "100"`, expected: http.StatusBadRequest, positive: false},
-		{id: 8, input: `{"balance" : "9223372036854775807"}`, expected: http.StatusUnprocessableEntity, positive: false},
-		{id: 9, input: `{"balance" : "290,75"`, expected: http.StatusBadRequest, positive: false},
-		{id: 10, input: `{"balance" : "-50"}`, expected: http.StatusUnprocessableEntity, positive: false},
-		{id: 11, input: `{"balance" : "-0.12"}`, expected: http.StatusUnprocessableEntity, positive: false},
-		{id: 12, input: `{"balance" : "-50"sadas}`, expected: http.StatusBadRequest, positive: false},
+		"bad format float" :{input: `{"balance" : "99999.999"}`,  statusCode: http.StatusUnprocessableEntity  },
+		"malformed json":{input: `{"balance" : "100"`,  statusCode: http.StatusBadRequest  },
+		"overflow":{input: `{"balance" : "9223372036854775807"}`,  statusCode: http.StatusUnprocessableEntity  },
+		"wrong separator" :{input: `{"balance" : "290,75"`,  statusCode: http.StatusBadRequest  },
+		"negative int":{input: `{"balance" : "-50"}`,  statusCode: http.StatusUnprocessableEntity  },
+		"negative float":{input: `{"balance" : "-0.12"}`,  statusCode: http.StatusUnprocessableEntity  },
+		"wrong json" :{input: `{"balance" : "-50"sadas}`,  statusCode: http.StatusBadRequest  },
 	}
 
 	// Switch to test mode and get the router
@@ -46,11 +45,8 @@ func TestCreateAccountHandler(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		r.ServeHTTP(w, req)
+		assert.Equal(t, item.statusCode, w.Code)
 
-		if w.Code != item.expected {
-			t.Errorf("[%d] wrong StatusCode: got %d, expected %d",
-				item.id, w.Code, item.expected)
-		}
 		/*
 				resp := w.Result()
 				body, _ := ioutil.ReadAll(resp.Body)

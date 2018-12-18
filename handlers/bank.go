@@ -92,7 +92,7 @@ func stringToBalanceInt64(s string) (int64, error) {
 		if err != nil {
 			return -1, err
 		} else {
-			if mulRes, err  := overflow.Mul64(parsed, 100); !err {
+			if mulRes, ok  := overflow.Mul64(parsed, 100); !ok {
 				return -1, errors.New("overflow, balance too high")
 			} else {
 				return mulRes, nil

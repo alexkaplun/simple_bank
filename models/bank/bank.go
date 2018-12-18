@@ -2,6 +2,7 @@ package bank
 
 import (
 	"errors"
+	"github.com/JohnCGriffin/overflow"
 	"github.com/google/uuid"
 	"strconv"
 	"sync"
@@ -78,23 +79,29 @@ func (b *Bank) Transfer(from uuid.UUID, to uuid.UUID, amount int64) error {
 
 	if _, ok := b.accounts[from]; !ok {
 		return errors.New("originating account not found")
-	} else {
-
-		// Check if from has enough balance
-		fromBalance := b.accounts[from].balance
-		if fromBalance < amount {
-			return errors.New("originating balance not enough")
-		}
-
-		//all validated, let's transfer
-		b.accounts[from].balance = fromBalance - amount
-		b.accounts[from].updatedAt = time.Now()
-
-		toBalance := b.accounts[to].balance
-		b.accounts[to].balance = toBalance + amount
-		b.accounts[to].updatedAt = time.Now()
-
-		return nil
 	}
+
+	fromBalance := b.accounts[from].balance
+	toBalance := b.accounts[to].balance
+
+	// Check if from has enough balance
+	if fromBalance < amount {
+		return errors.New("originating balance not enough")
+	}
+
+	// check for overflow after operation
+	addRes, ok := overflow.Add64(toBalance, amount)
+	if !ok {
+		return errors.New("overflow of to balance")
+	}
+
+	//all validated, let's transfer
+	b.accounts[from].balance = fromBalance - amount
+	b.accounts[from].updatedAt = time.Now()
+
+	b.accounts[to].balance = addRes
+	b.accounts[to].updatedAt = time.Now()
+
+	return nil
 
 }
