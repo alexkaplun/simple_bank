@@ -1,6 +1,6 @@
 package bank
 
-// go test -coverprofile=../test_out/cover.out && go tool cover -html=../test_out/cover.out -o ../test_out/cover.html
+// go test -coverprofile=$GOPATH/src/simple_bank/test_out/bank_cover.out && go tool cover -html=$GOPATH/src/simple_bank/test_out/bank_cover.out -o $GOPATH/src/simple_bank/test_out/bank_cover.html
 
 import (
 	"github.com/google/uuid"
