@@ -47,6 +47,7 @@ func TestCreateAccountHandler(t *testing.T) {
 		r.ServeHTTP(w, req)
 		assert.Equal(t, item.statusCode, w.Code)
 
+// TODO: test real response bodies structure
 		/*
 				resp := w.Result()
 				body, _ := ioutil.ReadAll(resp.Body)

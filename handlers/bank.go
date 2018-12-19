@@ -30,18 +30,26 @@ type ErrorResponse struct {
 	Message string `json:"error"`
 }
 
+type TransferRequest struct {
+}
+
+type JSONResponse struct {
+	Status int         `json:"status"`
+	Body   interface{} `json:"body"`
+}
+
 func CreateAccountHandler(c *gin.Context) {
 
 	var r CreateAccountRequest
 	err := c.BindJSON(&r)
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, &ErrorResponse{err.Error()})
+		c.JSON(http.StatusUnprocessableEntity, &JSONResponse{-1, ErrorResponse{err.Error()}})
 		return
 	}
 
 	balance, err := stringToBalanceInt64(r.Balance)
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, &ErrorResponse{err.Error()})
+		c.JSON(http.StatusUnprocessableEntity, &JSONResponse{-1, ErrorResponse{err.Error()}})
 		return
 	}
 
@@ -49,23 +57,23 @@ func CreateAccountHandler(c *gin.Context) {
 	uid, err := bank.CreateAccount(balance)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, &ErrorResponse{err.Error()})
+		c.JSON(http.StatusInternalServerError, &JSONResponse{-1, ErrorResponse{err.Error()}})
 		return
 	}
 
-	c.JSON(http.StatusOK, &CreateAccountResponse{uid.String()})
+	c.JSON(http.StatusOK, &JSONResponse{0, CreateAccountResponse{uid.String()}})
 }
 
 func GetBalanceByIdHandler(c *gin.Context) {
 	id := c.Param("id")
 	if id == "" {
-		c.JSON(http.StatusBadRequest, &ErrorResponse{"No account id provided"})
+		c.JSON(http.StatusBadRequest, &JSONResponse{-1, ErrorResponse{"No account id provided"}})
 		return
 	}
 
 	uid, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, &ErrorResponse{err.Error()})
+		c.JSON(http.StatusBadRequest, &JSONResponse{-1, ErrorResponse{err.Error()}})
 		return
 	}
 
@@ -73,11 +81,15 @@ func GetBalanceByIdHandler(c *gin.Context) {
 	balance, err := bank.GetAccountBalance(uid)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, &ErrorResponse{err.Error()})
+		c.JSON(http.StatusBadRequest, &JSONResponse{-1, ErrorResponse{err.Error()}})
 		return
 	}
 
-	c.JSON(http.StatusOK, &GetBalanceResponse{balanceInt64ToString(balance)})
+	c.JSON(http.StatusOK, &JSONResponse{ 0, GetBalanceResponse{balanceInt64ToString(balance)}})
+}
+
+func TransferHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, 0)
 }
 
 func stringToBalanceInt64(s string) (int64, error) {
@@ -92,7 +104,7 @@ func stringToBalanceInt64(s string) (int64, error) {
 		if err != nil {
 			return -1, err
 		} else {
-			if mulRes, ok  := overflow.Mul64(parsed, 100); !ok {
+			if mulRes, ok := overflow.Mul64(parsed, 100); !ok {
 				return -1, errors.New("overflow, balance too high")
 			} else {
 				return mulRes, nil
