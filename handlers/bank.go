@@ -56,8 +56,8 @@ func CreateAccountHandler(c *gin.Context) {
 		return
 	}
 
-	bank := bank.GetBank()
-	uid, err := bank.CreateAccount(balance)
+	_bank := bank.GetBank()
+	uid, err := _bank.CreateAccount(balance)
 
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, &JSONResponse{-1, ErrorResponse{err.Error()}})
@@ -69,10 +69,6 @@ func CreateAccountHandler(c *gin.Context) {
 
 func GetBalanceByIdHandler(c *gin.Context) {
 	id := c.Param("id")
-	if id == "" {
-		c.JSON(http.StatusBadRequest, &JSONResponse{-1, ErrorResponse{"No account id provided"}})
-		return
-	}
 
 	uid, err := uuid.Parse(id)
 	if err != nil {
@@ -80,8 +76,8 @@ func GetBalanceByIdHandler(c *gin.Context) {
 		return
 	}
 
-	bank := bank.GetBank()
-	balance, err := bank.GetAccountBalance(uid)
+	_bank := bank.GetBank()
+	balance, err := _bank.GetAccountBalance(uid)
 
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, &JSONResponse{-1, ErrorResponse{err.Error()}})
@@ -124,8 +120,8 @@ func TransferHandler(c *gin.Context) {
 	}
 
 	// attempt to transfer
-	bank := bank.GetBank()
-	err = bank.Transfer(from, to, amount)
+	_bank := bank.GetBank()
+	err = _bank.Transfer(from, to, amount)
 	if err != nil {
 		c.JSON(http.StatusUnprocessableEntity, &JSONResponse{-1, ErrorResponse{err.Error()}})
 		return
