@@ -31,6 +31,9 @@ type ErrorResponse struct {
 }
 
 type TransferRequest struct {
+	From string `json:"from"`
+	To string `json:"to"`
+	Amount string `json:"amount"`
 }
 
 type JSONResponse struct {
@@ -41,9 +44,9 @@ type JSONResponse struct {
 func CreateAccountHandler(c *gin.Context) {
 
 	var r CreateAccountRequest
-	err := c.BindJSON(&r)
+	err := c.ShouldBindJSON(&r)
 	if err != nil {
-		c.JSON(http.StatusUnprocessableEntity, &JSONResponse{-1, ErrorResponse{err.Error()}})
+		c.JSON(http.StatusBadRequest, &JSONResponse{-1, ErrorResponse{err.Error()}})
 		return
 	}
 
@@ -57,7 +60,7 @@ func CreateAccountHandler(c *gin.Context) {
 	uid, err := bank.CreateAccount(balance)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, &JSONResponse{-1, ErrorResponse{err.Error()}})
+		c.JSON(http.StatusUnprocessableEntity, &JSONResponse{-1, ErrorResponse{err.Error()}})
 		return
 	}
 
@@ -73,7 +76,7 @@ func GetBalanceByIdHandler(c *gin.Context) {
 
 	uid, err := uuid.Parse(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, &JSONResponse{-1, ErrorResponse{err.Error()}})
+		c.JSON(http.StatusUnprocessableEntity, &JSONResponse{-1, ErrorResponse{err.Error()}})
 		return
 	}
 
@@ -81,7 +84,7 @@ func GetBalanceByIdHandler(c *gin.Context) {
 	balance, err := bank.GetAccountBalance(uid)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, &JSONResponse{-1, ErrorResponse{err.Error()}})
+		c.JSON(http.StatusUnprocessableEntity, &JSONResponse{-1, ErrorResponse{err.Error()}})
 		return
 	}
 
@@ -89,7 +92,46 @@ func GetBalanceByIdHandler(c *gin.Context) {
 }
 
 func TransferHandler(c *gin.Context) {
-	c.JSON(http.StatusOK, 0)
+
+	var r TransferRequest
+
+	// Bind JSON
+	err := c.ShouldBindJSON(&r)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, &JSONResponse{-1, ErrorResponse{err.Error()}})
+		return
+	}
+
+	// validate balance
+	amount, err := stringToBalanceInt64(r.Amount)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, &JSONResponse{-1, ErrorResponse{err.Error()}})
+		return
+	}
+
+	// validating from UID
+	from, err := uuid.Parse(r.From)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, &JSONResponse{-1, ErrorResponse{err.Error()}})
+		return
+	}
+
+	// validating to UID
+	to, err := uuid.Parse(r.To)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, &JSONResponse{-1, ErrorResponse{err.Error()}})
+		return
+	}
+
+	// attempt to transfer
+	bank := bank.GetBank()
+	err = bank.Transfer(from, to, amount)
+	if err != nil {
+		c.JSON(http.StatusUnprocessableEntity, &JSONResponse{-1, ErrorResponse{err.Error()}})
+		return
+	}
+
+	c.JSON(http.StatusOK, &JSONResponse{ 0, nil})
 }
 
 func stringToBalanceInt64(s string) (int64, error) {

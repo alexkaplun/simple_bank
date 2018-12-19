@@ -17,9 +17,8 @@ func NewRouter() *gin.Engine {
 
 	router.PUT("/createAccount", handlers.CreateAccountHandler)
 	router.GET("/balance/:id", handlers.GetBalanceByIdHandler)
+	router.POST("/transfer", handlers.TransferHandler)
 
 	router.Use(middlewares.AuthMiddleware())
 	return router
 }
-
-

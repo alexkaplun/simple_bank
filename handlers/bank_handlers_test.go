@@ -25,9 +25,9 @@ func TestCreateAccountHandler(t *testing.T) {
 		"Normal float":{input: `{"balance" : "99999.99"}`,  statusCode: http.StatusOK  },
 		/// negative
 		"bad format float" :{input: `{"balance" : "99999.999"}`,  statusCode: http.StatusUnprocessableEntity  },
-		"malformed json":{input: `{"balance" : "100"`,  statusCode: http.StatusBadRequest  },
+		"malformed json":{input: `{"baldfddfance" : "100"`,  statusCode: http.StatusBadRequest  },
 		"overflow":{input: `{"balance" : "9223372036854775807"}`,  statusCode: http.StatusUnprocessableEntity  },
-		"wrong separator" :{input: `{"balance" : "290,75"`,  statusCode: http.StatusBadRequest  },
+		"wrong separator" :{input: `{"balance" : "290,75"}`,  statusCode: http.StatusUnprocessableEntity  },
 		"negative int":{input: `{"balance" : "-50"}`,  statusCode: http.StatusUnprocessableEntity  },
 		"negative float":{input: `{"balance" : "-0.12"}`,  statusCode: http.StatusUnprocessableEntity  },
 		"wrong json" :{input: `{"balance" : "-50"sadas}`,  statusCode: http.StatusBadRequest  },
@@ -37,7 +37,7 @@ func TestCreateAccountHandler(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	r := server.NewRouter()
 
-	for _, item := range cases {
+	for key, item := range cases {
 
 		url := "/createAccount"
 
@@ -45,7 +45,7 @@ func TestCreateAccountHandler(t *testing.T) {
 		w := httptest.NewRecorder()
 
 		r.ServeHTTP(w, req)
-		assert.Equal(t, item.statusCode, w.Code)
+		assert.Equal(t, item.statusCode, w.Code, key)
 
 // TODO: test real response bodies structure
 		/*

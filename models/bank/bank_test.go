@@ -165,3 +165,11 @@ func TestBank_TransferOverflow(t *testing.T) {
 	err := testBank.Transfer(uidFrom, uidTo, int64(1000))
 	assert.NotNil(t, err)
 }
+
+func TestBank_TransferSameAccount(t *testing.T) {
+	uidFrom, _ := uuid.Parse(ids[2]) // balance = 1000
+	uidTo, _ := uuid.Parse(ids[2])   // balace = 1000
+
+	err := testBank.Transfer(uidFrom, uidTo, int64(500))
+	assert.NotNil(t, err)
+}

@@ -68,9 +68,14 @@ func (b *Bank) Transfer(from uuid.UUID, to uuid.UUID, amount int64) error {
 	b.mu.Lock()
 	defer b.mu.Unlock()
 
+	// Accounts can not be the same
+	if from.String() == to.String() {
+		return errors.New("accounts must be different")
+	}
+
 	// checking 0 or negative amount
 	if amount <= 0 {
-		return errors.New("can not be negative balance")
+		return errors.New("can not be zero or negative transfer")
 	}
 
 	if _, ok := b.accounts[to]; !ok {
@@ -80,6 +85,7 @@ func (b *Bank) Transfer(from uuid.UUID, to uuid.UUID, amount int64) error {
 	if _, ok := b.accounts[from]; !ok {
 		return errors.New("originating account not found")
 	}
+
 
 	fromBalance := b.accounts[from].balance
 	toBalance := b.accounts[to].balance
