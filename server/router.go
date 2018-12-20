@@ -2,21 +2,16 @@ package server
 
 import (
 	"github.com/gin-gonic/gin"
-	"io"
-	"os"
+	"go.uber.org/zap"
 	"simple_bank/handlers"
+	"simple_bank/middlewares"
 )
 
-func NewRouter() *gin.Engine {
-	gin.DisableConsoleColor()
-
-	f, _ := os.Create("log/gin.log")
-	gin.DefaultWriter = io.MultiWriter(f)
-
+func NewRouter(logger *zap.Logger) *gin.Engine {
 	router := gin.New()
-	router.Use(gin.Logger())
-	router.Use(gin.Recovery())
 
+	router.Use(middlewares.ZapLogger(logger))
+	router.Use(gin.Recovery())
 
 	router.GET("/", func(c *gin.Context) {
 		c.String(200, "This is your banking application")
@@ -25,5 +20,6 @@ func NewRouter() *gin.Engine {
 	router.PUT("/createAccount", handlers.CreateAccountHandler)
 	router.GET("/balance/:id", handlers.GetBalanceByIdHandler)
 	router.POST("/transfer", handlers.TransferHandler)
+
 	return router
 }
